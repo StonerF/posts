@@ -1,0 +1,23 @@
+type User {
+    id: ID!
+    name: String!    
+}
+
+type Comments {
+
+    id: ID!
+    data: String!
+    author: User!
+
+}
+
+type Post {
+    id: ID!
+    data: String!
+    author: User!
+    comments: [Comments!]!
+}
+
+type Query {
+    posts : [Post!]!
+}
