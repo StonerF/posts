@@ -5,7 +5,6 @@ package graph
 import (
 	"bytes"
 	"context"
-	"embed"
 	"errors"
 	"fmt"
 	"io"
@@ -15,7 +14,7 @@ import (
 
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/99designs/gqlgen/graphql/introspection"
-	"github.com/StonerF/posts/graph/model"
+	"github.com/StonerF/posts/internal/model"
 	gqlparser "github.com/vektah/gqlparser/v2"
 	"github.com/vektah/gqlparser/v2/ast"
 )
@@ -505,19 +504,65 @@ func (ec *executionContext) introspectType(name string) (*introspection.Type, er
 	return introspection.WrapTypeFromDef(ec.Schema(), ec.Schema().Types[name]), nil
 }
 
-//go:embed "schema.graphqls"
-var sourcesFS embed.FS
-
-func sourceData(filename string) string {
-	data, err := sourcesFS.ReadFile(filename)
-	if err != nil {
-		panic(fmt.Sprintf("codegen problem: %s not available", filename))
-	}
-	return string(data)
+var sources = []*ast.Source{
+	{Name: "../../schema.graphqls", Input: `type Post {
+  id: ID!
+  authorId: ID!
+  title: String!
+  content: String!
+  allowComments: Boolean!
 }
 
-var sources = []*ast.Source{
-	{Name: "schema.graphqls", Input: sourceData("schema.graphqls"), BuiltIn: false},
+type CommentConnection {
+  edges: [CommentEdge!]!
+  pageInfo: PageInfo!
+}
+
+type CommentEdge {
+  cursor: String!
+  node: Comment!
+}
+
+type PageInfo {
+  endCursor: String
+  hasNextPage: Boolean!
+}
+
+type Comment {
+  id: ID!
+  authorId: ID!
+  postId: ID!
+  parentId: ID
+  content: String!
+  createdAt: String!
+  replies(first: Int, after: String): CommentConnection!
+}
+
+type Query {
+  posts(first: Int, after: String): PostConnection!
+  post(id: ID!): Post
+  comments(postId: ID!, first: Int, after: String): CommentConnection!
+}
+
+type PostConnection {
+  edges: [PostEdge!]!
+  pageInfo: PageInfo!
+}
+
+type PostEdge {
+  cursor: String!
+  node: Post!
+}
+
+type Mutation {
+  createPost(authorId: ID!, title: String!, content: String!, allowComments: Boolean!): Post!
+  createComment(authorId: ID! postId: ID!, content: String!): Comment!
+  createReply(authorId: ID!, postId: ID!, parentId: ID!, content: String!): Comment!
+}
+
+type Subscription {
+  commentAdded(postId: ID!): Comment!
+}`, BuiltIn: false},
 }
 var parsedSchema = gqlparser.MustLoadSchema(sources...)
 
@@ -1337,7 +1382,7 @@ func (ec *executionContext) _Comment_replies(ctx context.Context, field graphql.
 	}
 	res := resTmp.(*model.CommentConnection)
 	fc.Result = res
-	return ec.marshalNCommentConnection2ᚖgithubᚗcomᚋStonerFᚋpostsᚋgraphᚋmodelᚐCommentConnection(ctx, field.Selections, res)
+	return ec.marshalNCommentConnection2ᚖgithubᚗcomᚋStonerFᚋpostsᚋinternalᚋmodelᚐCommentConnection(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Comment_replies(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -1398,7 +1443,7 @@ func (ec *executionContext) _CommentConnection_edges(ctx context.Context, field 
 	}
 	res := resTmp.([]*model.CommentEdge)
 	fc.Result = res
-	return ec.marshalNCommentEdge2ᚕᚖgithubᚗcomᚋStonerFᚋpostsᚋgraphᚋmodelᚐCommentEdgeᚄ(ctx, field.Selections, res)
+	return ec.marshalNCommentEdge2ᚕᚖgithubᚗcomᚋStonerFᚋpostsᚋinternalᚋmodelᚐCommentEdgeᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_CommentConnection_edges(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -1448,7 +1493,7 @@ func (ec *executionContext) _CommentConnection_pageInfo(ctx context.Context, fie
 	}
 	res := resTmp.(*model.PageInfo)
 	fc.Result = res
-	return ec.marshalNPageInfo2ᚖgithubᚗcomᚋStonerFᚋpostsᚋgraphᚋmodelᚐPageInfo(ctx, field.Selections, res)
+	return ec.marshalNPageInfo2ᚖgithubᚗcomᚋStonerFᚋpostsᚋinternalᚋmodelᚐPageInfo(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_CommentConnection_pageInfo(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -1542,7 +1587,7 @@ func (ec *executionContext) _CommentEdge_node(ctx context.Context, field graphql
 	}
 	res := resTmp.(*model.Comment)
 	fc.Result = res
-	return ec.marshalNComment2ᚖgithubᚗcomᚋStonerFᚋpostsᚋgraphᚋmodelᚐComment(ctx, field.Selections, res)
+	return ec.marshalNComment2ᚖgithubᚗcomᚋStonerFᚋpostsᚋinternalᚋmodelᚐComment(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_CommentEdge_node(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -1602,7 +1647,7 @@ func (ec *executionContext) _Mutation_createPost(ctx context.Context, field grap
 	}
 	res := resTmp.(*model.Post)
 	fc.Result = res
-	return ec.marshalNPost2ᚖgithubᚗcomᚋStonerFᚋpostsᚋgraphᚋmodelᚐPost(ctx, field.Selections, res)
+	return ec.marshalNPost2ᚖgithubᚗcomᚋStonerFᚋpostsᚋinternalᚋmodelᚐPost(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Mutation_createPost(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -1669,7 +1714,7 @@ func (ec *executionContext) _Mutation_createComment(ctx context.Context, field g
 	}
 	res := resTmp.(*model.Comment)
 	fc.Result = res
-	return ec.marshalNComment2ᚖgithubᚗcomᚋStonerFᚋpostsᚋgraphᚋmodelᚐComment(ctx, field.Selections, res)
+	return ec.marshalNComment2ᚖgithubᚗcomᚋStonerFᚋpostsᚋinternalᚋmodelᚐComment(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Mutation_createComment(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -1740,7 +1785,7 @@ func (ec *executionContext) _Mutation_createReply(ctx context.Context, field gra
 	}
 	res := resTmp.(*model.Comment)
 	fc.Result = res
-	return ec.marshalNComment2ᚖgithubᚗcomᚋStonerFᚋpostsᚋgraphᚋmodelᚐComment(ctx, field.Selections, res)
+	return ec.marshalNComment2ᚖgithubᚗcomᚋStonerFᚋpostsᚋinternalᚋmodelᚐComment(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Mutation_createReply(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -2116,7 +2161,7 @@ func (ec *executionContext) _PostConnection_edges(ctx context.Context, field gra
 	}
 	res := resTmp.([]*model.PostEdge)
 	fc.Result = res
-	return ec.marshalNPostEdge2ᚕᚖgithubᚗcomᚋStonerFᚋpostsᚋgraphᚋmodelᚐPostEdgeᚄ(ctx, field.Selections, res)
+	return ec.marshalNPostEdge2ᚕᚖgithubᚗcomᚋStonerFᚋpostsᚋinternalᚋmodelᚐPostEdgeᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_PostConnection_edges(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -2166,7 +2211,7 @@ func (ec *executionContext) _PostConnection_pageInfo(ctx context.Context, field 
 	}
 	res := resTmp.(*model.PageInfo)
 	fc.Result = res
-	return ec.marshalNPageInfo2ᚖgithubᚗcomᚋStonerFᚋpostsᚋgraphᚋmodelᚐPageInfo(ctx, field.Selections, res)
+	return ec.marshalNPageInfo2ᚖgithubᚗcomᚋStonerFᚋpostsᚋinternalᚋmodelᚐPageInfo(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_PostConnection_pageInfo(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -2260,7 +2305,7 @@ func (ec *executionContext) _PostEdge_node(ctx context.Context, field graphql.Co
 	}
 	res := resTmp.(*model.Post)
 	fc.Result = res
-	return ec.marshalNPost2ᚖgithubᚗcomᚋStonerFᚋpostsᚋgraphᚋmodelᚐPost(ctx, field.Selections, res)
+	return ec.marshalNPost2ᚖgithubᚗcomᚋStonerFᚋpostsᚋinternalᚋmodelᚐPost(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_PostEdge_node(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -2316,7 +2361,7 @@ func (ec *executionContext) _Query_posts(ctx context.Context, field graphql.Coll
 	}
 	res := resTmp.(*model.PostConnection)
 	fc.Result = res
-	return ec.marshalNPostConnection2ᚖgithubᚗcomᚋStonerFᚋpostsᚋgraphᚋmodelᚐPostConnection(ctx, field.Selections, res)
+	return ec.marshalNPostConnection2ᚖgithubᚗcomᚋStonerFᚋpostsᚋinternalᚋmodelᚐPostConnection(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Query_posts(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -2374,7 +2419,7 @@ func (ec *executionContext) _Query_post(ctx context.Context, field graphql.Colle
 	}
 	res := resTmp.(*model.Post)
 	fc.Result = res
-	return ec.marshalOPost2ᚖgithubᚗcomᚋStonerFᚋpostsᚋgraphᚋmodelᚐPost(ctx, field.Selections, res)
+	return ec.marshalOPost2ᚖgithubᚗcomᚋStonerFᚋpostsᚋinternalᚋmodelᚐPost(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Query_post(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -2441,7 +2486,7 @@ func (ec *executionContext) _Query_comments(ctx context.Context, field graphql.C
 	}
 	res := resTmp.(*model.CommentConnection)
 	fc.Result = res
-	return ec.marshalNCommentConnection2ᚖgithubᚗcomᚋStonerFᚋpostsᚋgraphᚋmodelᚐCommentConnection(ctx, field.Selections, res)
+	return ec.marshalNCommentConnection2ᚖgithubᚗcomᚋStonerFᚋpostsᚋinternalᚋmodelᚐCommentConnection(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Query_comments(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -2641,7 +2686,7 @@ func (ec *executionContext) _Subscription_commentAdded(ctx context.Context, fiel
 				w.Write([]byte{'{'})
 				graphql.MarshalString(field.Alias).MarshalGQL(w)
 				w.Write([]byte{':'})
-				ec.marshalNComment2ᚖgithubᚗcomᚋStonerFᚋpostsᚋgraphᚋmodelᚐComment(ctx, field.Selections, res).MarshalGQL(w)
+				ec.marshalNComment2ᚖgithubᚗcomᚋStonerFᚋpostsᚋinternalᚋmodelᚐComment(ctx, field.Selections, res).MarshalGQL(w)
 				w.Write([]byte{'}'})
 			})
 		case <-ctx.Done():
@@ -5537,11 +5582,11 @@ func (ec *executionContext) marshalNBoolean2bool(ctx context.Context, sel ast.Se
 	return res
 }
 
-func (ec *executionContext) marshalNComment2githubᚗcomᚋStonerFᚋpostsᚋgraphᚋmodelᚐComment(ctx context.Context, sel ast.SelectionSet, v model.Comment) graphql.Marshaler {
+func (ec *executionContext) marshalNComment2githubᚗcomᚋStonerFᚋpostsᚋinternalᚋmodelᚐComment(ctx context.Context, sel ast.SelectionSet, v model.Comment) graphql.Marshaler {
 	return ec._Comment(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalNComment2ᚖgithubᚗcomᚋStonerFᚋpostsᚋgraphᚋmodelᚐComment(ctx context.Context, sel ast.SelectionSet, v *model.Comment) graphql.Marshaler {
+func (ec *executionContext) marshalNComment2ᚖgithubᚗcomᚋStonerFᚋpostsᚋinternalᚋmodelᚐComment(ctx context.Context, sel ast.SelectionSet, v *model.Comment) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
@@ -5551,11 +5596,11 @@ func (ec *executionContext) marshalNComment2ᚖgithubᚗcomᚋStonerFᚋpostsᚋ
 	return ec._Comment(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalNCommentConnection2githubᚗcomᚋStonerFᚋpostsᚋgraphᚋmodelᚐCommentConnection(ctx context.Context, sel ast.SelectionSet, v model.CommentConnection) graphql.Marshaler {
+func (ec *executionContext) marshalNCommentConnection2githubᚗcomᚋStonerFᚋpostsᚋinternalᚋmodelᚐCommentConnection(ctx context.Context, sel ast.SelectionSet, v model.CommentConnection) graphql.Marshaler {
 	return ec._CommentConnection(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalNCommentConnection2ᚖgithubᚗcomᚋStonerFᚋpostsᚋgraphᚋmodelᚐCommentConnection(ctx context.Context, sel ast.SelectionSet, v *model.CommentConnection) graphql.Marshaler {
+func (ec *executionContext) marshalNCommentConnection2ᚖgithubᚗcomᚋStonerFᚋpostsᚋinternalᚋmodelᚐCommentConnection(ctx context.Context, sel ast.SelectionSet, v *model.CommentConnection) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
@@ -5565,7 +5610,7 @@ func (ec *executionContext) marshalNCommentConnection2ᚖgithubᚗcomᚋStonerF�
 	return ec._CommentConnection(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalNCommentEdge2ᚕᚖgithubᚗcomᚋStonerFᚋpostsᚋgraphᚋmodelᚐCommentEdgeᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.CommentEdge) graphql.Marshaler {
+func (ec *executionContext) marshalNCommentEdge2ᚕᚖgithubᚗcomᚋStonerFᚋpostsᚋinternalᚋmodelᚐCommentEdgeᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.CommentEdge) graphql.Marshaler {
 	ret := make(graphql.Array, len(v))
 	var wg sync.WaitGroup
 	isLen1 := len(v) == 1
@@ -5589,7 +5634,7 @@ func (ec *executionContext) marshalNCommentEdge2ᚕᚖgithubᚗcomᚋStonerFᚋp
 			if !isLen1 {
 				defer wg.Done()
 			}
-			ret[i] = ec.marshalNCommentEdge2ᚖgithubᚗcomᚋStonerFᚋpostsᚋgraphᚋmodelᚐCommentEdge(ctx, sel, v[i])
+			ret[i] = ec.marshalNCommentEdge2ᚖgithubᚗcomᚋStonerFᚋpostsᚋinternalᚋmodelᚐCommentEdge(ctx, sel, v[i])
 		}
 		if isLen1 {
 			f(i)
@@ -5609,7 +5654,7 @@ func (ec *executionContext) marshalNCommentEdge2ᚕᚖgithubᚗcomᚋStonerFᚋp
 	return ret
 }
 
-func (ec *executionContext) marshalNCommentEdge2ᚖgithubᚗcomᚋStonerFᚋpostsᚋgraphᚋmodelᚐCommentEdge(ctx context.Context, sel ast.SelectionSet, v *model.CommentEdge) graphql.Marshaler {
+func (ec *executionContext) marshalNCommentEdge2ᚖgithubᚗcomᚋStonerFᚋpostsᚋinternalᚋmodelᚐCommentEdge(ctx context.Context, sel ast.SelectionSet, v *model.CommentEdge) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
@@ -5634,7 +5679,7 @@ func (ec *executionContext) marshalNID2string(ctx context.Context, sel ast.Selec
 	return res
 }
 
-func (ec *executionContext) marshalNPageInfo2ᚖgithubᚗcomᚋStonerFᚋpostsᚋgraphᚋmodelᚐPageInfo(ctx context.Context, sel ast.SelectionSet, v *model.PageInfo) graphql.Marshaler {
+func (ec *executionContext) marshalNPageInfo2ᚖgithubᚗcomᚋStonerFᚋpostsᚋinternalᚋmodelᚐPageInfo(ctx context.Context, sel ast.SelectionSet, v *model.PageInfo) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
@@ -5644,11 +5689,11 @@ func (ec *executionContext) marshalNPageInfo2ᚖgithubᚗcomᚋStonerFᚋposts�
 	return ec._PageInfo(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalNPost2githubᚗcomᚋStonerFᚋpostsᚋgraphᚋmodelᚐPost(ctx context.Context, sel ast.SelectionSet, v model.Post) graphql.Marshaler {
+func (ec *executionContext) marshalNPost2githubᚗcomᚋStonerFᚋpostsᚋinternalᚋmodelᚐPost(ctx context.Context, sel ast.SelectionSet, v model.Post) graphql.Marshaler {
 	return ec._Post(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalNPost2ᚖgithubᚗcomᚋStonerFᚋpostsᚋgraphᚋmodelᚐPost(ctx context.Context, sel ast.SelectionSet, v *model.Post) graphql.Marshaler {
+func (ec *executionContext) marshalNPost2ᚖgithubᚗcomᚋStonerFᚋpostsᚋinternalᚋmodelᚐPost(ctx context.Context, sel ast.SelectionSet, v *model.Post) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
@@ -5658,11 +5703,11 @@ func (ec *executionContext) marshalNPost2ᚖgithubᚗcomᚋStonerFᚋpostsᚋgra
 	return ec._Post(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalNPostConnection2githubᚗcomᚋStonerFᚋpostsᚋgraphᚋmodelᚐPostConnection(ctx context.Context, sel ast.SelectionSet, v model.PostConnection) graphql.Marshaler {
+func (ec *executionContext) marshalNPostConnection2githubᚗcomᚋStonerFᚋpostsᚋinternalᚋmodelᚐPostConnection(ctx context.Context, sel ast.SelectionSet, v model.PostConnection) graphql.Marshaler {
 	return ec._PostConnection(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalNPostConnection2ᚖgithubᚗcomᚋStonerFᚋpostsᚋgraphᚋmodelᚐPostConnection(ctx context.Context, sel ast.SelectionSet, v *model.PostConnection) graphql.Marshaler {
+func (ec *executionContext) marshalNPostConnection2ᚖgithubᚗcomᚋStonerFᚋpostsᚋinternalᚋmodelᚐPostConnection(ctx context.Context, sel ast.SelectionSet, v *model.PostConnection) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
@@ -5672,7 +5717,7 @@ func (ec *executionContext) marshalNPostConnection2ᚖgithubᚗcomᚋStonerFᚋp
 	return ec._PostConnection(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalNPostEdge2ᚕᚖgithubᚗcomᚋStonerFᚋpostsᚋgraphᚋmodelᚐPostEdgeᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.PostEdge) graphql.Marshaler {
+func (ec *executionContext) marshalNPostEdge2ᚕᚖgithubᚗcomᚋStonerFᚋpostsᚋinternalᚋmodelᚐPostEdgeᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.PostEdge) graphql.Marshaler {
 	ret := make(graphql.Array, len(v))
 	var wg sync.WaitGroup
 	isLen1 := len(v) == 1
@@ -5696,7 +5741,7 @@ func (ec *executionContext) marshalNPostEdge2ᚕᚖgithubᚗcomᚋStonerFᚋpost
 			if !isLen1 {
 				defer wg.Done()
 			}
-			ret[i] = ec.marshalNPostEdge2ᚖgithubᚗcomᚋStonerFᚋpostsᚋgraphᚋmodelᚐPostEdge(ctx, sel, v[i])
+			ret[i] = ec.marshalNPostEdge2ᚖgithubᚗcomᚋStonerFᚋpostsᚋinternalᚋmodelᚐPostEdge(ctx, sel, v[i])
 		}
 		if isLen1 {
 			f(i)
@@ -5716,7 +5761,7 @@ func (ec *executionContext) marshalNPostEdge2ᚕᚖgithubᚗcomᚋStonerFᚋpost
 	return ret
 }
 
-func (ec *executionContext) marshalNPostEdge2ᚖgithubᚗcomᚋStonerFᚋpostsᚋgraphᚋmodelᚐPostEdge(ctx context.Context, sel ast.SelectionSet, v *model.PostEdge) graphql.Marshaler {
+func (ec *executionContext) marshalNPostEdge2ᚖgithubᚗcomᚋStonerFᚋpostsᚋinternalᚋmodelᚐPostEdge(ctx context.Context, sel ast.SelectionSet, v *model.PostEdge) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
@@ -6052,7 +6097,7 @@ func (ec *executionContext) marshalOInt2ᚖint32(ctx context.Context, sel ast.Se
 	return res
 }
 
-func (ec *executionContext) marshalOPost2ᚖgithubᚗcomᚋStonerFᚋpostsᚋgraphᚋmodelᚐPost(ctx context.Context, sel ast.SelectionSet, v *model.Post) graphql.Marshaler {
+func (ec *executionContext) marshalOPost2ᚖgithubᚗcomᚋStonerFᚋpostsᚋinternalᚋmodelᚐPost(ctx context.Context, sel ast.SelectionSet, v *model.Post) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}

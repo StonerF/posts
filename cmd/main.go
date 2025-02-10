@@ -11,8 +11,9 @@ import (
 	"github.com/99designs/gqlgen/graphql/handler/extension"
 	"github.com/99designs/gqlgen/graphql/handler/transport"
 	"github.com/99designs/gqlgen/graphql/playground"
-	"github.com/StonerF/posts/graph"
 	"github.com/StonerF/posts/internal/config"
+	"github.com/StonerF/posts/internal/graph"
+	"github.com/StonerF/posts/internal/resolver"
 	"github.com/StonerF/posts/internal/storage"
 	"github.com/StonerF/posts/internal/storage/inmemory"
 	"github.com/StonerF/posts/internal/storage/postgres"
@@ -47,7 +48,7 @@ func main() {
 		log.Fatal("repository nil error")
 	}
 
-	Resolver := graph.NewResolver(repository)
+	Resolver := resolver.NewResolver(repository)
 
 	srv := handler.New(graph.NewExecutableSchema(graph.Config{Resolvers: Resolver}))
 

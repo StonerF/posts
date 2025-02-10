@@ -6,7 +6,7 @@ import (
 	"time"
 
 	sq "github.com/Masterminds/squirrel"
-	"github.com/StonerF/posts/graph/model"
+	"github.com/StonerF/posts/internal/model"
 	"github.com/jackc/pgx/v5"
 )
 

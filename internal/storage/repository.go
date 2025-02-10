@@ -1,6 +1,6 @@
 package storage
 
-import "github.com/StonerF/posts/graph/model"
+import "github.com/StonerF/posts/internal/model"
 
 type Repository interface {
 	CreatePost(authorID, title, content string, allowComments bool) (*model.Post, error)

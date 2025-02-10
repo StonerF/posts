@@ -1,23 +1,58 @@
-type User {
-    id: ID!
-    name: String!    
-}
-
-type Comments {
-
-    id: ID!
-    data: String!
-    author: User!
-
-}
-
 type Post {
-    id: ID!
-    data: String!
-    author: User!
-    comments: [Comments!]!
+  id: ID!
+  authorId: ID!
+  title: String!
+  content: String!
+  allowComments: Boolean!
+}
+
+type CommentConnection {
+  edges: [CommentEdge!]!
+  pageInfo: PageInfo!
+}
+
+type CommentEdge {
+  cursor: String!
+  node: Comment!
+}
+
+type PageInfo {
+  endCursor: String
+  hasNextPage: Boolean!
+}
+
+type Comment {
+  id: ID!
+  authorId: ID!
+  postId: ID!
+  parentId: ID
+  content: String!
+  createdAt: String!
+  replies(first: Int, after: String): CommentConnection!
 }
 
 type Query {
-    posts : [Post!]!
+  posts(first: Int, after: String): PostConnection!
+  post(id: ID!): Post
+  comments(postId: ID!, first: Int, after: String): CommentConnection!
+}
+
+type PostConnection {
+  edges: [PostEdge!]!
+  pageInfo: PageInfo!
+}
+
+type PostEdge {
+  cursor: String!
+  node: Post!
+}
+
+type Mutation {
+  createPost(authorId: ID!, title: String!, content: String!, allowComments: Boolean!): Post!
+  createComment(authorId: ID! postId: ID!, content: String!): Comment!
+  createReply(authorId: ID!, postId: ID!, parentId: ID!, content: String!): Comment!
+}
+
+type Subscription {
+  commentAdded(postId: ID!): Comment!
 }

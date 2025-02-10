@@ -7,7 +7,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/StonerF/posts/graph/model"
+	"github.com/StonerF/posts/internal/model"
 )
 
 type InMemoryRepository struct {

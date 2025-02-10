@@ -1,11 +1,11 @@
-package graph
+package resolver
 
 //go:generate go run github.com/99designs/gqlgen generate
 
 import (
 	"sync"
 
-	"github.com/StonerF/posts/graph/model"
+	"github.com/StonerF/posts/internal/model"
 	"github.com/StonerF/posts/internal/storage"
 )
 
