@@ -28,22 +28,28 @@ func main() {
 	if err != nil {
 		log.Fatalln("Can't load config", err)
 	}
+	fmt.Println("Loaded config", Cfg)
 	var repository storage.Repository
 	if Cfg.Storage == "PostgreSQL" {
+		fmt.Println("Connstring", fmt.Sprintf("user=%s password=%s dbname=%s host=%s port=%s sslmode=disable", Cfg.DB_User, Cfg.DB_Password, Cfg.DB_Name, Cfg.DB_Host, Cfg.DB_Port))
 		db, err := pgx.Connect(context.Background(), fmt.Sprintf("user=%s password=%s dbname=%s host=%s port=%s sslmode=disable", Cfg.DB_User, Cfg.DB_Password, Cfg.DB_Name, Cfg.DB_Host, Cfg.DB_Port))
 
 		if err != nil {
-			log.Fatalln("Can`t connect to db")
+			log.Fatalln("Can`t connect to db", err)
 		}
 		repository = postgres.NewPostgresRep(db)
 	}
-	if Cfg.Storage == "Inmemory" {
+	if Cfg.Storage == "IN_MEMORY" {
 		repository = inmemory.NewInMemoryRepository()
+	}
+
+	if repository == nil {
+		log.Fatal("repository nil error")
 	}
 
 	Resolver := graph.NewResolver(repository)
 
-	srv := handler.NewDefaultServer(graph.NewExecutableSchema(graph.Config{Resolvers: Resolver}))
+	srv := handler.New(graph.NewExecutableSchema(graph.Config{Resolvers: Resolver}))
 
 	srv.AddTransport(&transport.Websocket{
 		Upgrader: websocket.Upgrader{

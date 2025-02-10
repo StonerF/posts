@@ -19,7 +19,7 @@ type Config struct {
 
 func MustloadConfig() (Config, error) {
 
-	err := godotenv.Load("/home/user/work/testwork/test1/posts/.env")
+	err := godotenv.Load()
 	if err != nil {
 		log.Fatal("Error Load .env file", err)
 	}
@@ -28,7 +28,7 @@ func MustloadConfig() (Config, error) {
 
 	Cfg.DB_Port = os.Getenv("PORT")
 	if Cfg.DB_Port == "" {
-		Cfg.DB_Port = "8080"
+		Cfg.DB_Port = "5432"
 	}
 	Cfg.Storage = os.Getenv("STORAGE")
 	if Cfg.Storage == "IN_MEMORY" {
